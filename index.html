@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + TS</title>
+  </head>
+  <body>
+    <h1>inpainting board</h1>
+    merge image :
+    <button
+      id="mergeBtn"
+      style="padding: 10px; background-color: yellow; cursor: pointer"
+    >
+      Merge
+    </button>
+    merged image :
+    <img id="merged_image" alt="merged image" />
+    <div></div>
+    <div style="width: 80%; display: flex; justify-content: space-between">
+      <div>
+        <h3>Base Canvas Frame(Green Part)</h3>
+        <div>
+          layer order control buttons:
+          <button
+            id="bringToFrontBtn"
+            style="padding: 10px; background-color: orange; cursor: pointer"
+          >
+            bring to front
+          </button>
+          <button
+            id="bringForwardBtn"
+            style="padding: 10px; background-color: pink; cursor: pointer"
+          >
+            bring forward
+          </button>
+        </div>
+        <br />
+        <canvas id="app" width="900" height="700"></canvas>
+      </div>
+      <div style="display: flex; align-items: center">
+        <input id="imageInput" accept="image/*" type="file" />
+
+        <button
+          id="canvasBtn"
+          style="padding: 10px; background-color: skyblue; cursor: pointer"
+        >
+          upload image
+        </button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/index.ts"></script>
+  </body>
+</html>
