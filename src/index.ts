@@ -1,4 +1,5 @@
-import inpainter from "fabric-image-maker";
+// import inpainter from "fabric-image-maker";
+import inpainter from "./main";
 // "dev": "vite",
 const result = inpainter.createBaseCanvas("app");
 
@@ -55,3 +56,12 @@ if (result !== null) {
     inpainter.bringForward();
   });
 }
+
+const getBlobBtnElement = document.querySelector(
+  "#getBlobBtn"
+) as HTMLButtonElement;
+
+getBlobBtnElement.addEventListener("click", function () {
+  const response = inpainter.imageCanvasToBlob();
+  console.log(response);
+});
