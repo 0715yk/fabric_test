@@ -117,6 +117,8 @@ const inpainter = (function () {
           });
           maskingCanvas.setWidth(width);
           maskingCanvas.setHeight(height);
+          maskingCanvas.freeDrawingBrush.color = "white";
+
           return maskingCanvas;
         } catch (e) {
           console.error(e);
@@ -157,3 +159,5 @@ export default inpainter;
 //
 // - 마스킹은 그림 그리는 정도로 처리하면 되는지?(brush 크기 조절 기능?)
 // - 최종적으로 canvas의 이미지를 추출하고, masking layer도 이미지로 추출하면 되는지? 데이터 타입은 뭐로 주면 되는지? => 이미지 블랍으로 처리
+
+// 변수 발생 -> erase 기능이 없다.. ㅎ => Konva로 갈아타버리는 것도 괜찮을듯??
