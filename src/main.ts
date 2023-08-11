@@ -5,15 +5,25 @@ import { fabric } from "fabric";
 
 const inpainter = (function () {
   let canvas = null as null | fabric.Canvas;
+  let maskingCanvas = null as null | fabric.Canvas;
   let selectedObject = null as null | fabric.Image;
   return {
-    createBaseCanvas(id: string) {
+    createBaseCanvas({
+      id,
+      width,
+      height,
+    }: {
+      id: string;
+      width: number;
+      height: number;
+    }) {
       try {
         canvas = new fabric.Canvas(id, {
           backgroundColor: "green",
           preserveObjectStacking: true,
         });
-
+        canvas.setWidth(width);
+        canvas.setHeight(height);
         return canvas;
       } catch (e) {
         console.error(e);
@@ -43,10 +53,31 @@ const inpainter = (function () {
         canvas.bringToFront(selectedObject);
       }
     },
-    canvasToDataUrl() {
-      if (canvas !== null) {
-        const pngURL = canvas.toDataURL();
-        return pngURL;
+    bringBack() {
+      if (selectedObject !== null && canvas !== null) {
+        canvas.sendToBack(selectedObject);
+      }
+    },
+    bringToBackward() {
+      if (selectedObject !== null && canvas !== null) {
+        canvas.sendBackwards(selectedObject);
+      }
+    },
+    canvasToDataUrl(type: string) {
+      if (type === "image") {
+        if (canvas !== null) {
+          const pngURL = canvas.toDataURL();
+          return pngURL;
+        } else {
+          return "";
+        }
+      } else if (type === "mask") {
+        if (maskingCanvas !== null) {
+          const pngURL = maskingCanvas.toDataURL();
+          return pngURL;
+        } else {
+          return "";
+        }
       } else {
         return "";
       }
@@ -64,14 +95,49 @@ const inpainter = (function () {
       return bb;
     },
     imageCanvasToBlob() {
-      const dataURI = this.canvasToDataUrl();
+      const dataURI = this.canvasToDataUrl("image");
       const blob = this.dataURItoBlob(dataURI);
       return blob;
+    },
+    createMaskingCanvas({
+      id,
+      width,
+      height,
+    }: {
+      id: string;
+      width: number;
+      height: number;
+    }) {
+      if (maskingCanvas !== null) {
+        return maskingCanvas;
+      } else {
+        try {
+          maskingCanvas = new fabric.Canvas(id, {
+            isDrawingMode: true,
+          });
+          maskingCanvas.setWidth(width);
+          maskingCanvas.setHeight(height);
+          return maskingCanvas;
+        } catch (e) {
+          console.error(e);
+          return null;
+        }
+      }
+    },
+    controlDrawingBrushWidth(pixel: number) {
+      if (maskingCanvas !== null) {
+        maskingCanvas.freeDrawingBrush.width = pixel;
+      }
     },
   };
 })();
 
 export default inpainter;
+
+// - 빈 레이어를 만든다.
+// - 이 때 UX 상으로는 빈레이어 생성이라기보다는 마스킹 모드 이런 버튼을 만들어야할듯
+// - 그 버튼을 누르면 빈 레이어가 최상단에 오고, 아니면 잠시 display:none처리
+// -
 
 // 1) stage를 만든다.
 // 2) 이미지를 업로드하면 새로운 레이어를 만든다.
@@ -86,6 +152,8 @@ export default inpainter;
 // - testing code 작성 및 최종 테스트
 
 // 궁금한 점
-// - 이 뒤에 canvas 크기는 고정인지 아니면 상대적으로 더큰 이미지가 기준이 되는지?
+// - 그 때보니까 이미지를 크기를 조정하지 않고 일단 업로드 한다음에 수정할 수 있는 형태인 것 같던데, 그렇다고 하면 캔버스 크기를 고정시키고 시작해야하나?..
+// - 이거 약간 피그마처럼 그렇게 돼야하는거 아닌가??..
+//
 // - 마스킹은 그림 그리는 정도로 처리하면 되는지?(brush 크기 조절 기능?)
 // - 최종적으로 canvas의 이미지를 추출하고, masking layer도 이미지로 추출하면 되는지? 데이터 타입은 뭐로 주면 되는지? => 이미지 블랍으로 처리

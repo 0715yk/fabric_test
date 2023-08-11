@@ -1,0 +1,13 @@
+.canvas_frame {
+  position: relative;
+  width: 900px;
+  height: 700px;
+}
+
+.canvas-container {
+  position: absolute !important;
+}
+
+#masking {
+  background: transparent;
+}
