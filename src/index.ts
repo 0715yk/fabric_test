@@ -82,7 +82,7 @@ const getBlobBtnElement = document.querySelector(
 ) as HTMLButtonElement;
 
 getBlobBtnElement.addEventListener("click", function () {
-  const response = inpainter.imageCanvasToBlob();
+  inpainter.imageCanvasToBlob();
 });
 
 const maskingBtnElement = document.querySelector(
