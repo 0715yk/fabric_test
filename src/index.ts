@@ -1,13 +1,16 @@
-// import inpainter from "fabric-image-maker";
-import inpainter from "./main";
-// "dev": "vite",
-const result = inpainter.createBaseCanvas({
+import inpainter from "fabric-image-maker";
+
+// import inpainter from "./main";
+
+const result = inpainter.createImageCanvas({
   id: "app",
   width: 900,
   height: 700,
+  backgroundColor: "skyblue",
 });
+const { canvas, context } = inpainter.createDrawingCanvas("#masking");
 
-if (result !== null) {
+if (result !== null && canvas !== null && context !== null) {
   const imageInputElement = document.querySelector(
     "#imageInput"
   ) as HTMLInputElement;
@@ -59,71 +62,92 @@ if (result !== null) {
   bringForwardBtnElement.addEventListener("click", function () {
     inpainter.bringForward();
   });
-}
+  const bringToBackBtnElement = document.querySelector(
+    "#sendToBackBtn"
+  ) as HTMLButtonElement;
 
-const bringToBackBtnElement = document.querySelector(
-  "#sendToBackBtn"
-) as HTMLButtonElement;
-
-bringToBackBtnElement.addEventListener("click", function () {
-  inpainter.bringBack();
-});
-
-const sendBackwardBtnElement = document.querySelector(
-  "#sendBackwardBtn"
-) as HTMLButtonElement;
-
-sendBackwardBtnElement.addEventListener("click", function () {
-  inpainter.bringToBackward();
-});
-
-const getBlobBtnElement = document.querySelector(
-  "#getBlobBtn"
-) as HTMLButtonElement;
-
-getBlobBtnElement.addEventListener("click", function () {
-  const response = inpainter.imageCanvasToBlob();
-  console.log(response);
-});
-
-const maskingBtnElement = document.querySelector(
-  "#maskingBtn"
-) as HTMLButtonElement;
-
-const maskingCanvasElement = document.querySelector(
-  "#masking"
-) as HTMLCanvasElement;
-
-maskingBtnElement.addEventListener("click", function () {
-  const response = inpainter.createMaskingCanvas({
-    id: "masking",
-    width: 900,
-    height: 700,
+  bringToBackBtnElement.addEventListener("click", function () {
+    inpainter.bringBack();
   });
-  if (response !== null) {
-    if (maskingCanvasElement.parentElement) {
-      if (maskingCanvasElement.parentElement.style.display === "block") {
-        maskingCanvasElement.parentElement.style.display = "none";
+
+  const sendBackwardBtnElement = document.querySelector(
+    "#sendBackwardBtn"
+  ) as HTMLButtonElement;
+
+  sendBackwardBtnElement.addEventListener("click", function () {
+    inpainter.bringToBackward();
+  });
+
+  const getBlobBtnElement = document.querySelector(
+    "#getBlobBtn"
+  ) as HTMLButtonElement;
+
+  getBlobBtnElement.addEventListener("click", function () {
+    const response = inpainter.imageCanvasToBlob();
+    console.log(response);
+  });
+
+  const getMaskingBlobBtnElement = document.querySelector(
+    "#getMaskingBlobBtn"
+  ) as HTMLButtonElement;
+
+  getMaskingBlobBtnElement.addEventListener("click", function () {
+    const response = inpainter.drawingCanvasToBlob();
+    console.log(response);
+  });
+
+  const maskingBtnElement = document.querySelector(
+    "#maskingBtn"
+  ) as HTMLButtonElement;
+
+  const maskingCanvasElement = document.querySelector(
+    "#masking"
+  ) as HTMLCanvasElement;
+
+  maskingBtnElement.addEventListener("click", function () {
+    if (maskingCanvasElement) {
+      if (maskingCanvasElement.style.display === "block") {
+        maskingCanvasElement.style.display = "none";
       } else {
-        maskingCanvasElement.parentElement.style.display = "block";
+        maskingCanvasElement.style.display = "block";
       }
     }
+    // }
+  });
+
+  const pixelInput = document.querySelector("#pixelInput") as HTMLInputElement;
+  pixelInput.addEventListener("change", function () {
+    inpainter.setStrokeWidth(parseInt(pixelInput.value));
+  });
+
+  const mergeMaskingBtnElement = document.querySelector(
+    "#mergeMaskingBtn"
+  ) as HTMLButtonElement;
+
+  mergeMaskingBtnElement.addEventListener("click", function () {
+    const mergedImageElement = document.querySelector(
+      "#merged_masked_image"
+    ) as HTMLImageElement;
+    const url = inpainter.canvasToDataUrl("mask");
+    mergedImageElement.src = url;
+  });
+
+  // Drawing functions
+
+  const select = document.querySelector("#selection");
+
+  if (select !== null) {
+    select.addEventListener("change", function (e) {
+      const mode = (e.target as HTMLTextAreaElement).value;
+      inpainter.setDrawingMode(mode);
+    });
   }
-});
 
-const pixelInput = document.querySelector("#pixelInput") as HTMLInputElement;
-pixelInput.addEventListener("change", function () {
-  inpainter.controlDrawingBrushWidth(parseInt(pixelInput.value));
-});
+  const canvasBtn2Element = document.querySelector(
+    "#canvasBtn2"
+  ) as HTMLButtonElement;
 
-const mergeMaskingBtnElement = document.querySelector(
-  "#mergeMaskingBtn"
-) as HTMLButtonElement;
-
-mergeMaskingBtnElement.addEventListener("click", function () {
-  const mergedImageElement = document.querySelector(
-    "#merged_masked_image"
-  ) as HTMLImageElement;
-  const url = inpainter.canvasToDataUrl("mask");
-  mergedImageElement.src = url;
-});
+  canvasBtn2Element.addEventListener("click", function () {
+    inpainter.deleteImage();
+  });
+}

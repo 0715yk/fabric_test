@@ -1,30 +1,133 @@
 import { fabric } from "fabric";
 
-// "test": "echo \"Error: no test specified\" && exit 1",
-// "dev": "vite",
-
 const inpainter = (function () {
-  let canvas = null as null | fabric.Canvas;
-  let maskingCanvas = null as null | fabric.Canvas;
-  let selectedObject = null as null | fabric.Image;
+  let imageStackCanvas = null as null | fabric.Canvas;
+  let drawingCanvas = {
+    context: null as null | CanvasRenderingContext2D,
+    canvas: null as null | HTMLCanvasElement,
+    color: "#FFFFFF",
+    strokeWidth: 15,
+  };
+  let selectedImage = null as null | fabric.Image;
+
   return {
-    createBaseCanvas({
+    createDrawingCanvas(id: string) {
+      let latestPoint = [0, 0];
+      let drawing = false;
+      const canvas = document.querySelector(id) as HTMLCanvasElement;
+      if (canvas !== null) {
+        const context = canvas.getContext("2d");
+
+        if (context !== null) {
+          drawingCanvas.context = context;
+          drawingCanvas.canvas = canvas;
+          const continueStroke = (newPoint: number[]) => {
+            context.beginPath();
+            context.moveTo(latestPoint[0], latestPoint[1]);
+            context.strokeStyle = drawingCanvas.color;
+            context.lineWidth = drawingCanvas.strokeWidth;
+            context.lineCap = "round";
+            context.lineJoin = "round";
+            context.lineTo(newPoint[0], newPoint[1]);
+            context.stroke();
+
+            latestPoint = newPoint;
+          };
+
+          // Event helpers
+
+          const startStroke = (point: number[]) => {
+            drawing = true;
+            latestPoint = point;
+          };
+
+          // Event handlers
+
+          const mouseMove = (evt: Event) => {
+            if (!drawing) {
+              return;
+            }
+
+            continueStroke([
+              (<MouseEvent>evt).offsetX,
+              (<MouseEvent>evt).offsetY,
+            ]);
+          };
+
+          const mouseDown = (evt: MouseEvent) => {
+            if (drawing) {
+              return;
+            }
+            evt.preventDefault();
+            canvas.addEventListener("mousemove", mouseMove, false);
+            startStroke([evt.offsetX, evt.offsetY]);
+          };
+
+          const mouseEnter = (evt: MouseEvent) => {
+            if (!drawing) {
+              return;
+            }
+            mouseDown(evt);
+          };
+
+          const endStroke = (evt: MouseEvent) => {
+            if (!drawing) {
+              return;
+            }
+            drawing = false;
+            if (evt.currentTarget !== null) {
+              evt.currentTarget.removeEventListener(
+                "mousemove",
+                mouseMove,
+                false
+              );
+            }
+          };
+
+          // event listeners
+          canvas.addEventListener("mousedown", mouseDown, false);
+          canvas.addEventListener("mouseup", endStroke, false);
+          canvas.addEventListener("mouseout", endStroke, false);
+          canvas.addEventListener("mouseenter", mouseEnter, false);
+
+          return { canvas, context };
+        } else {
+          return { canvas: null, context: null };
+        }
+      }
+      return { canvas: null, context: null };
+    },
+    setDrawingMode(mode: string) {
+      if (drawingCanvas.context !== null) {
+        drawingCanvas.context.globalCompositeOperation =
+          mode === "brush" ? "source-over" : "destination-out";
+      }
+    },
+    setStrokeWidth(width: number) {
+      drawingCanvas.strokeWidth = width;
+    },
+    setBrushColor(color: string) {
+      drawingCanvas.color = color;
+    },
+    createImageCanvas({
       id,
       width,
       height,
+      backgroundColor,
     }: {
       id: string;
       width: number;
       height: number;
+      backgroundColor: string;
     }) {
       try {
-        canvas = new fabric.Canvas(id, {
-          backgroundColor: "green",
+        imageStackCanvas = new fabric.Canvas(id, {
+          backgroundColor: backgroundColor,
           preserveObjectStacking: true,
         });
-        canvas.setWidth(width);
-        canvas.setHeight(height);
-        return canvas;
+        imageStackCanvas.setWidth(width);
+        imageStackCanvas.setHeight(height);
+        return imageStackCanvas;
       } catch (e) {
         console.error(e);
         return null;
@@ -33,48 +136,79 @@ const inpainter = (function () {
     addImageLayer(src: string) {
       (function () {
         fabric.Image.fromURL(src, function (oImg: fabric.Image) {
-          if (canvas !== null) {
+          if (imageStackCanvas !== null) {
             oImg.set("left", 0).set("top", 0);
             oImg.on("selected", function () {
-              selectedObject = oImg;
+              selectedImage = oImg;
             });
-            canvas.add(oImg);
+            imageStackCanvas.add(oImg);
           }
         });
       })();
     },
     bringForward() {
-      if (selectedObject !== null && canvas !== null) {
-        canvas.bringForward(selectedObject);
+      if (selectedImage !== null && imageStackCanvas !== null) {
+        imageStackCanvas.bringForward(selectedImage);
       }
     },
     bringToFront() {
-      if (selectedObject !== null && canvas !== null) {
-        canvas.bringToFront(selectedObject);
+      if (selectedImage !== null && imageStackCanvas !== null) {
+        imageStackCanvas.bringToFront(selectedImage);
       }
     },
     bringBack() {
-      if (selectedObject !== null && canvas !== null) {
-        canvas.sendToBack(selectedObject);
+      if (selectedImage !== null && imageStackCanvas !== null) {
+        imageStackCanvas.sendToBack(selectedImage);
       }
     },
     bringToBackward() {
-      if (selectedObject !== null && canvas !== null) {
-        canvas.sendBackwards(selectedObject);
+      if (selectedImage !== null && imageStackCanvas !== null) {
+        imageStackCanvas.sendBackwards(selectedImage);
       }
+    },
+    deleteImage() {
+      if (selectedImage !== null && imageStackCanvas !== null) {
+        imageStackCanvas.remove(selectedImage);
+      }
+    },
+    cloneCanvas(oldCanvas: HTMLCanvasElement) {
+      const newCanvas = document.createElement("canvas");
+      const context = newCanvas.getContext("2d");
+
+      newCanvas.width = oldCanvas.width;
+      newCanvas.height = oldCanvas.height;
+
+      if (context !== null) {
+        context.drawImage(oldCanvas, 0, 0);
+      }
+
+      return { canvas: newCanvas, context };
     },
     canvasToDataUrl(type: string) {
       if (type === "image") {
-        if (canvas !== null) {
-          const pngURL = canvas.toDataURL();
+        if (imageStackCanvas !== null) {
+          const pngURL = imageStackCanvas.toDataURL();
           return pngURL;
         } else {
           return "";
         }
       } else if (type === "mask") {
-        if (maskingCanvas !== null) {
-          const pngURL = maskingCanvas.toDataURL();
-          return pngURL;
+        if (drawingCanvas.canvas !== null && drawingCanvas.context !== null) {
+          const { canvas, context } = this.cloneCanvas(drawingCanvas.canvas);
+          if (context !== null) {
+            context.globalCompositeOperation = "destination-over";
+            context.fillStyle = "black";
+            context.fillRect(
+              0,
+              0,
+              drawingCanvas.canvas.width,
+              drawingCanvas.canvas.height
+            );
+            const pngURL = canvas.toDataURL();
+            return pngURL;
+          } else {
+            return "";
+          }
         } else {
           return "";
         }
@@ -83,15 +217,15 @@ const inpainter = (function () {
       }
     },
     dataURItoBlob(dataURI: string) {
-      var byteString = window.atob(dataURI.split(",")[1]);
-      var mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
-      var ab = new ArrayBuffer(byteString.length);
-      var ia = new Uint8Array(ab);
-      for (var i = 0; i < byteString.length; i++) {
+      const byteString = window.atob(dataURI.split(",")[1]);
+      const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
         ia[i] = byteString.charCodeAt(i);
       }
 
-      var bb = new Blob([ab], { type: mimeString });
+      const bb = new Blob([ab], { type: mimeString });
       return bb;
     },
     imageCanvasToBlob() {
@@ -99,37 +233,10 @@ const inpainter = (function () {
       const blob = this.dataURItoBlob(dataURI);
       return blob;
     },
-    createMaskingCanvas({
-      id,
-      width,
-      height,
-    }: {
-      id: string;
-      width: number;
-      height: number;
-    }) {
-      if (maskingCanvas !== null) {
-        return maskingCanvas;
-      } else {
-        try {
-          maskingCanvas = new fabric.Canvas(id, {
-            isDrawingMode: true,
-          });
-          maskingCanvas.setWidth(width);
-          maskingCanvas.setHeight(height);
-          maskingCanvas.freeDrawingBrush.color = "white";
-
-          return maskingCanvas;
-        } catch (e) {
-          console.error(e);
-          return null;
-        }
-      }
-    },
-    controlDrawingBrushWidth(pixel: number) {
-      if (maskingCanvas !== null) {
-        maskingCanvas.freeDrawingBrush.width = pixel;
-      }
+    drawingCanvasToBlob() {
+      const dataURI = this.canvasToDataUrl("mask");
+      const blob = this.dataURItoBlob(dataURI);
+      return blob;
     },
   };
 })();

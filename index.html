@@ -19,6 +19,17 @@
     >
       get image blob
     </button>
+    <button
+      id="getMaskingBlobBtn"
+      style="
+        padding: 10px;
+        background-color: orange;
+        cursor: pointer;
+        color: #ffffff;
+      "
+    >
+      get masking blob
+    </button>
     <h1>inpainting board</h1>
     merge image :
     <button
@@ -80,7 +91,7 @@
         <br />
         <div class="canvas_frame">
           <canvas id="app"></canvas>
-          <canvas id="masking"></canvas>
+          <canvas id="masking" width="900" height="700"></canvas>
         </div>
       </div>
       <div
@@ -104,6 +115,10 @@
           >
             Masking Mode
           </button>
+          <select id="selection">
+            <option value="brush">brush</option>
+            <option value="eraser">eraser</option>
+          </select>
           <input type="number" id="pixelInput" />
         </div>
         <div style="display: flex; align-items: center">
@@ -113,6 +128,12 @@
             style="padding: 10px; background-color: skyblue; cursor: pointer"
           >
             upload image
+          </button>
+          <button
+            id="canvasBtn2"
+            style="padding: 10px; background-color: red; cursor: pointer"
+          >
+            delete image
           </button>
         </div>
       </div>
