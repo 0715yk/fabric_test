@@ -1,6 +1,6 @@
-import inpainter from "fabric-image-maker";
+// import inpainter from "fabric-image-maker";
 
-// import inpainter from "./main";
+import inpainter from "./main";
 
 const result = inpainter.createImageCanvas({
   id: "app",
