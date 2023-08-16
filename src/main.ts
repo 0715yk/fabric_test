@@ -8,6 +8,7 @@ const inpainter = (function () {
     color: "#FFFFFF",
     strokeWidth: 15,
   };
+  let zoomSize = 1;
   let selectedImage = null as null | fabric.Image;
 
   return {
@@ -259,6 +260,17 @@ const inpainter = (function () {
       const dataURI = this.canvasToDataUrl("mask");
       const blob = this.dataURItoBlob(dataURI);
       return blob;
+    },
+    controlZoom(flag: string) {
+      if (imageStackCanvas && drawingCanvas.context) {
+        if (flag === "+") {
+          zoomSize += 0.06;
+          imageStackCanvas.setZoom(zoomSize);
+        } else if (flag === "-") {
+          zoomSize -= 0.06;
+          imageStackCanvas.setZoom(zoomSize);
+        }
+      }
     },
   };
 })();

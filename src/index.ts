@@ -151,3 +151,19 @@ if (result !== null && canvas !== null && context !== null) {
     inpainter.deleteImage();
   });
 }
+
+const zoomUpBtnElement = document.querySelector(
+  "#zoomUpBtn"
+) as HTMLButtonElement;
+
+zoomUpBtnElement.addEventListener("click", function () {
+  inpainter.controlZoom("+");
+});
+
+const zoomDownBtnElement = document.querySelector(
+  "#zoomDownBtn"
+) as HTMLButtonElement;
+
+zoomDownBtnElement.addEventListener("click", function () {
+  inpainter.controlZoom("-");
+});
