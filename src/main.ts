@@ -10,8 +10,31 @@ const inpainter = (function () {
   };
   let zoomSize = 1;
   let selectedImage = null as null | fabric.Image;
-
+  const brushColor = "white";
+  const brushSize = 30;
   return {
+    getDrawCursor() {
+      const circle = `
+        <svg
+          height="${drawingCanvas.strokeWidth}"
+          fill="${brushColor}"
+          viewBox="0 0 ${drawingCanvas.strokeWidth * 2} ${
+        drawingCanvas.strokeWidth * 2
+      }"
+          width="${drawingCanvas.strokeWidth}"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="50%"
+            cy="50%"
+            r="${drawingCanvas.strokeWidth}" 
+          />
+        </svg>
+      `;
+
+      return `data:image/svg+xml;base64,${window.btoa(circle)}`;
+    },
+
     createDrawingCanvas(id: string) {
       let latestPoint = [0, 0];
       let drawing = false;
@@ -65,6 +88,9 @@ const inpainter = (function () {
           };
 
           const mouseEnter = (evt: MouseEvent) => {
+            canvas.style.cursor = `url(${this.getDrawCursor()}) ${
+              brushSize / 2
+            } ${brushSize / 2}, crosshair`;
             if (!drawing) {
               return;
             }
@@ -75,6 +101,7 @@ const inpainter = (function () {
             if (!drawing) {
               return;
             }
+
             drawing = false;
             if (evt.currentTarget !== null) {
               evt.currentTarget.removeEventListener(
